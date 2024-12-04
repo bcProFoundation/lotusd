@@ -79,5 +79,5 @@ bool IsRuthEnabled(const Consensus::Params &params,
         return false;
     }
     return pindexPrev->GetMedianTimePast() >=
-           gArgs.GetArg("-judgesactivationtime", params.ruthActivationTime);
+           gArgs.GetArg("-ruthactivationtime", params.ruthActivationTime);
 }
