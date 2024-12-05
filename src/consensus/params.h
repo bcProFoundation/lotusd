@@ -15,6 +15,7 @@
 namespace Consensus {
 
 struct CoinbaseAddresses {
+    std::vector<std::string> burn;
     std::vector<std::string> genesis;
     std::vector<std::string> exodus;
     std::vector<std::string> leviticus;
@@ -22,6 +23,7 @@ struct CoinbaseAddresses {
     std::vector<std::string> deuteronomy;
     std::vector<std::string> joshua;
     std::vector<std::string> judges;
+    std::vector<std::string> ruth;
 };
 
 /**

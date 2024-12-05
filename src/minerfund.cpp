@@ -10,6 +10,8 @@
 #include <consensus/activation.h>
 #include <key_io.h> // For DecodeDestination
 
+#include <cstdint>
+
 static const CTxOut BuildOutput(const std::string &address,
                                 const Amount amount) {
     const std::unique_ptr<CChainParams> mainNetParams =
@@ -22,6 +24,43 @@ static const CTxOut BuildOutput(const std::string &address,
     }
     const CScript script = GetScriptForDestination(dest);
     return {amount, script};
+}
+
+// Build output with capped amount. The remaining is burned.
+static const std::vector<CTxOut>
+BuildOutputsCyclingFlat(const std::vector<std::string> &addresses,
+                        const CBlockIndex *pindexPrev, 
+                        const Amount blockReward, 
+                        const Amount cappedAmount, 
+                        const std::string burnAddress) {
+    std::vector<CTxOut> outputs;
+    const size_t numAddresses = addresses.size();
+    const auto blockHeight = pindexPrev->nHeight + 1;
+    const auto addressIndx = blockHeight % numAddresses;
+
+    // Share amount is now half of the block reward as per original code, but capped if necessary
+    Amount shareAmount = blockReward / 2;
+
+    // If the share amount exceeds the cap, adjust it.
+    if (shareAmount > cappedAmount) {
+        shareAmount = cappedAmount;
+    }
+
+    // The address to pay out to based on the block height
+    const auto address = addresses[addressIndx];
+
+    // Add output for the selected address
+    outputs.push_back(BuildOutput(address, shareAmount));
+
+    // Calculate the remaining amount after distribution to the selected address
+    Amount remaining = blockReward - shareAmount;
+
+    // If there's anything left after paying out to the address, send it to the burn address
+    if (remaining > 0) {
+        outputs.push_back(BuildOutput(burnAddress, remaining));
+    }
+
+    return outputs;
 }
 
 static const std::vector<CTxOut>
@@ -58,7 +97,7 @@ std::vector<CTxOut> GetMinerFundRequiredOutputs(const Consensus::Params &params,
 
     // 2024-12-21T09:20:00.000Z protocol upgrade which send the miner fund to a burn address
     if (IsRuthEnabled(params, pindexPrev)) {
-        return BuildOutputsCycling(params.coinbasePayoutAddresses.ruth,
+        return BuildOutputsCycling(params.coinbasePayoutAddresses.burn,
                                    pindexPrev, blockReward);
     }
 
