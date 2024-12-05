@@ -56,9 +56,10 @@ std::vector<CTxOut> GetMinerFundRequiredOutputs(const Consensus::Params &params,
         return {};
     }
 
-    // 2024-12-21T09:20:00.000Z protocol upgrade which removed the funding forever
+    // 2024-12-21T09:20:00.000Z protocol upgrade which send the miner fund to a burn address
     if (IsRuthEnabled(params, pindexPrev)) {
-        return {};
+        return BuildOutputsCycling(params.coinbasePayoutAddresses.ruth,
+                                   pindexPrev, blockReward);
     }
 
     if (IsJudgesEnabled(params, pindexPrev)) {

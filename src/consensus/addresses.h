@@ -140,6 +140,11 @@ Consensus::CoinbaseAddresses AddressSets = {
     .judges =
         {
             "lotus_16PSJMaps9sQg7aBQgyY1RdHb2fZYdmWhQPbgus75"
+        },
+    .ruth =
+        {
+            // Burn address - this address has no corresponding private key
+            "lotus_16PSJQWWnyZvpXASxfYPnMuZgXuJe9Mi4Ko9E6AJJ"
         }
 };
 } // namespace RewardAddresses
