@@ -118,6 +118,35 @@ public:
         // 2024-12-21T09:20:00.000Z protocol upgrade
         consensus.ruthActivationTime = 1734772800;
 
+        // Change to numerical upgrades. Initialize activation times
+        consensus.bodhiActivationTimes = {
+            1747051200,  // 0 - 2025-05-12T12:00:00.000Z - Bodhi activation
+            1769428800   // 1 - 2026-01-26T12:00:00.000Z - First upgrade 2026 Bodhi Day, if no address is provided prior to this time, the miner fund is burned
+        };
+
+        // Add dynamic activation time for Bodhi activations
+        if (mapArgs.count("-bodhiactivationtime")) {
+            std::string argValue = mapArgs["-bodhiactivationtime"];
+            size_t delimiterPos = argValue.find(',');
+            if (delimiterPos != std::string::npos) {
+                std::string upgradeIndexStr = argValue.substr(0, delimiterPos);
+                std::string activationTimeStr = argValue.substr(delimiterPos + 1);
+
+                int upgradeIndex = std::stoi(upgradeIndexStr);
+                int64_t activationTime = std::stoll(activationTimeStr);
+
+                if (upgradeIndex >= 0 && upgradeIndex < consensus.bodhiActivationTimes.size()) {
+                    consensus.bodhiActivationTimes[upgradeIndex] = activationTime;
+                }
+                // Handle error: Index out of bounds or invalid input
+            }
+        }
+
+        // Add a new activation time 365 days from the last activation time, after this activation time, if no updates from the software, miner fund is burned
+        int64_t lastActivationTime = consensus.bodhiActivationTimes.back();
+        int64_t nextActivationTime = lastActivationTime + 365 * 24 * 60 * 60;
+        consensus.bodhiActivationTimes.push_back(nextActivationTime);
+
         /**
          * The message start string is designed to be unlikely to occur in
          * normal data. The characters are rarely used upper ASCII, not valid as
@@ -269,6 +298,12 @@ public:
             mainnetConsensus.ruthActivationTime -
             testnetActivationOffset;
 
+        // Bodhi activation times offset for testnet
+        consensus.bodhiActivationTimes.reserve(mainnetConsensus.bodhiActivationTimes.size());
+        for (const auto& time : mainnetConsensus.bodhiActivationTimes) {
+            consensus.bodhiActivationTimes.push_back(time - testnetActivationOffset);
+        }
+
         // "ltdk" with MSB set
         diskMagic[0] = 0xec;
         diskMagic[1] = 0xf4;
@@ -384,6 +419,9 @@ public:
         consensus.judgesActivationTime = mainnetConsensus.judgesActivationTime;
         // 2024-12-21T09:20:00.000Z protocol upgrade
         consensus.ruthActivationTime = mainnetConsensus.ruthActivationTime;
+
+        // Bodhi activation times
+        consensus.bodhiActivationTimes = mainnetConsensus.bodhiActivationTimes;
 
         // "lrdk" with MSB set
         diskMagic[0] = 0xec;

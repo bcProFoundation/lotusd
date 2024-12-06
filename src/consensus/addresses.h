@@ -5,11 +5,8 @@
 
 namespace RewardAddresses {
 Consensus::CoinbaseAddresses AddressSets = {
-    .burn = 
-        { 
-            // Burn address - this address has no corresponding private key
-            "lotus_16PSJQWWnyZvpXASxfYPnMuZgXuJe9Mi4Ko9E6AJJ"
-        }
+    // Burn address - this address has no corresponding private key
+    .burnAddress = "lotus_16PSJQWWnyZvpXASxfYPnMuZgXuJe9Mi4Ko9E6AJJ",
     .genesis =
         {
             // Foundation
@@ -146,10 +143,12 @@ Consensus::CoinbaseAddresses AddressSets = {
         {
             "lotus_16PSJMaps9sQg7aBQgyY1RdHb2fZYdmWhQPbgus75"
         },
-    .ruth =
+    .bodhiUpgrades = {
+        // 0 - Bodhi Genesis
         {
-            // Burn address - this address has no corresponding private key
-            "lotus_16PSJQWWnyZvpXASxfYPnMuZgXuJe9Mi4Ko9E6AJJ"
+            "lotus_16PSJLMtCuFnyMb3rz4zbbhAtJgppp8GiY5NpGGev"
         }
+        // ... add more AddressSet for subsequent upgrades
+    }
 };
 } // namespace RewardAddresses

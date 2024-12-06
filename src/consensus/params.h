@@ -15,7 +15,7 @@
 namespace Consensus {
 
 struct CoinbaseAddresses {
-    std::vector<std::string> burn;
+    std::string burnAddress;
     std::vector<std::string> genesis;
     std::vector<std::string> exodus;
     std::vector<std::string> leviticus;
@@ -24,6 +24,9 @@ struct CoinbaseAddresses {
     std::vector<std::string> joshua;
     std::vector<std::string> judges;
     std::vector<std::string> ruth;
+
+    // New: Vector for future numerical upgrades
+    std::vector<std::vector<std::string>> bodhiUpgrades;
 };
 
 /**
@@ -53,6 +56,12 @@ struct Params {
     /** Unit time used for MTP activation of 2024-12-21T09:20:00.000Z protocol
      * upgrade */
     int ruthActivationTime;
+
+    // Activation times for Bodhi upgrades
+    std::vector<int64_t> bodhiActivationTimes;
+
+    // Miner fund cap amount in satoshis
+    Amount bodhiCappedMinerFund = Amount(260 * 1000000);  // 260 Lotus, where 1 Lotus = 1,000,000 satoshis
 
     /**
      * Don't warn about unknown BIP 9 activations below this height.

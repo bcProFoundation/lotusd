@@ -28,23 +28,17 @@ static const CTxOut BuildOutput(const std::string &address,
 
 // Build output with capped amount. The remaining is burned.
 static const std::vector<CTxOut>
-BuildOutputsCyclingFlat(const std::vector<std::string> &addresses,
+BuildOutputsCyclingCapped(const std::vector<std::string> &addresses,
                         const CBlockIndex *pindexPrev, 
                         const Amount blockReward, 
-                        const Amount cappedAmount, 
-                        const std::string burnAddress) {
+                        const Consensus::Params& params) {
     std::vector<CTxOut> outputs;
     const size_t numAddresses = addresses.size();
     const auto blockHeight = pindexPrev->nHeight + 1;
     const auto addressIndx = blockHeight % numAddresses;
 
-    // Share amount is now half of the block reward as per original code, but capped if necessary
-    Amount shareAmount = blockReward / 2;
-
-    // If the share amount exceeds the cap, adjust it.
-    if (shareAmount > cappedAmount) {
-        shareAmount = cappedAmount;
-    }
+    // Share amount is now half of the block reward, but capped at the consensus parameter
+    Amount shareAmount = std::min(blockReward / 2, params.bodhiCappedMinerFund);
 
     // The address to pay out to based on the block height
     const auto address = addresses[addressIndx];
@@ -57,7 +51,7 @@ BuildOutputsCyclingFlat(const std::vector<std::string> &addresses,
 
     // If there's anything left after paying out to the address, send it to the burn address
     if (remaining > 0) {
-        outputs.push_back(BuildOutput(burnAddress, remaining));
+        outputs.push_back(BuildOutput(params.coinbasePayoutAddresses.burnAddress, remaining));
     }
 
     return outputs;
@@ -95,10 +89,35 @@ std::vector<CTxOut> GetMinerFundRequiredOutputs(const Consensus::Params &params,
         return {};
     }
 
+    if (pindexPrev == nullptr) {
+        return {};
+    }
+
+    const int64_t blockTime = pindexPrev->GetMedianTimePast();
+    const int64_t blockHeight = pindexPrev->nHeight + 1;
+
+    // Check for Bodhi upgrades, from the latest to the Bodhi genesis
+    if (!params.bodhiActivationTimes.empty()) {
+        for (size_t bodhiIndex = params.bodhiActivationTimes.size(); bodhiIndex > 0; --bodhiIndex) {
+            size_t index = bodhiIndex - 1; // Adjust for zero-based indexing
+            
+            if (blockTime >= params.bodhiActivationTimes[index]) {
+                if (!params.coinbasePayoutAddresses.bodhiUpgrades.empty() && 
+                    index < params.coinbasePayoutAddresses.bodhiUpgrades.size()) {
+                    const auto &bodhiAddresses = params.coinbasePayoutAddresses.bodhiUpgrades[index];
+                    if (!bodhiAddresses.empty()) {
+                        return BuildOutputsCyclingCapped(bodhiAddresses, pindexPrev, blockReward, params);
+                    }
+                }
+            }
+        }
+        // If no Bodhi upgrade applies, proceed to check earlier upgrades
+    }
+
     // 2024-12-21T09:20:00.000Z protocol upgrade which send the miner fund to a burn address
     if (IsRuthEnabled(params, pindexPrev)) {
-        return BuildOutputsCycling(params.coinbasePayoutAddresses.burn,
-                                   pindexPrev, blockReward);
+        return {BuildOutput(params.coinbasePayoutAddresses.burnAddress,
+                                   blockReward)};
     }
 
     if (IsJudgesEnabled(params, pindexPrev)) {
