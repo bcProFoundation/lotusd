@@ -25,6 +25,12 @@ static const CTxOut BuildOutput(const std::string &address,
     const CScript script = GetScriptForDestination(dest);
     return {amount, script};
 }
+static const CTxOut BuildBurnOutput(const Amount amount) {
+    // Create a script with OP_RETURN to burn the amount
+    CScript scriptPubKey;
+    scriptPubKey << OP_RETURN;
+    return {amount, scriptPubKey};
+}
 
 // Build output with capped amount. The remaining is burned.
 static const std::vector<CTxOut>
@@ -43,7 +49,7 @@ BuildOutputsCyclingCapped(const std::vector<std::string> &addresses,
     // The address to pay out to based on the block height
     const auto address = addresses[addressIndx];
 
-    // Add output for the selected address
+    // Add output for the selected adßdress
     outputs.push_back(BuildOutput(address, shareAmount));
 
     // Calculate the remaining amount after distribution to the selected address
@@ -51,7 +57,7 @@ BuildOutputsCyclingCapped(const std::vector<std::string> &addresses,
 
     // If there's anything left after paying out to the address, send it to the burn address
     if (remaining > 0) {
-        outputs.push_back(BuildOutput(params.coinbasePayoutAddresses.burnAddress, remaining));
+        outputs.push_back(BuildBurnOutput(remaining));
     }
 
     return outputs;
@@ -116,8 +122,8 @@ std::vector<CTxOut> GetMinerFundRequiredOutputs(const Consensus::Params &params,
 
     // 2024-12-21T09:20:00.000Z protocol upgrade which send the miner fund to a burn address
     if (IsRuthEnabled(params, pindexPrev)) {
-        return {BuildOutput(params.coinbasePayoutAddresses.burnAddress,
-                                   blockReward)};
+        Amount burnAmount = blockReward / 2;
+        return {BuildBurnOutput(burnAmount)};
     }
 
     if (IsJudgesEnabled(params, pindexPrev)) {

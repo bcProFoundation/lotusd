@@ -5,8 +5,6 @@
 
 namespace RewardAddresses {
 Consensus::CoinbaseAddresses AddressSets = {
-    // Burn address - this address has no corresponding private key
-    .burnAddress = "lotus_16PSJQWWnyZvpXASxfYPnMuZgXuJe9Mi4Ko9E6AJJ",
     .genesis =
         {
             // Foundation
