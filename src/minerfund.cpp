@@ -35,27 +35,43 @@ static const CTxOut BuildBurnOutput(const Amount amount) {
 // Build output with capped amount. The remaining is burned.
 static const std::vector<CTxOut>
 BuildOutputsCyclingCapped(const std::vector<std::string> &addresses,
-                        const CBlockIndex *pindexPrev, 
-                        const Amount blockReward, 
-                        const Consensus::Params& params) {
+                          const CBlockIndex *pindexPrev, 
+                          const Amount blockReward, 
+                          const Consensus::Params& params, 
+                          size_t bodhiIndex) {
     std::vector<CTxOut> outputs;
     const size_t numAddresses = addresses.size();
     const auto blockHeight = pindexPrev->nHeight + 1;
     const auto addressIndx = blockHeight % numAddresses;
 
-    // Share amount is now half of the block reward, but capped at the consensus parameter
-    Amount shareAmount = std::min(blockReward / 2, params.bodhiCappedMinerFund);
+    // Share amount is now divided into 3 buckets, each capped at 1/3 of the current cap limit
+    Amount fundingAmount = std::min(blockReward / 2, params.bodhiCappedFundingAmount);
+    Amount bucketAmount = fundingAmount / 3;
 
     // The address to pay out to based on the block height
     const auto address = addresses[addressIndx];
 
-    // Add output for the selected adßdress
-    outputs.push_back(BuildOutput(address, shareAmount));
+    // Add output for the selected address
+    outputs.push_back(BuildOutput(address, bucketAmount));
+
+    // Handle Staking Rewards
+    if (params.bodhiStakingRewardsActivation >= bodhiIndex) {
+        outputs.push_back(BuildStakingRewardsOutput(bucketAmount));
+    } else {
+        outputs.push_back(BuildBurnOutput(bucketAmount));
+    }
+
+    // Handle Community Fund
+    if (params.bodhiCommunityFundActivation >= bodhiIndex) {
+        outputs.push_back(BuildCommunityFundOutput(bucketAmount));
+    } else {
+        outputs.push_back(BuildBurnOutput(bucketAmount));
+    }
 
     // Calculate the remaining amount after distribution to the selected address
-    Amount remaining = blockReward - shareAmount;
+    Amount remaining = fundingAmount - (bucketAmount * 3);
 
-    // If there's anything left after paying out to the address, send it to the burn address
+    // If there's anything left after paying out to the address, staking rewards, and community fund, send it to the burn address
     if (remaining > 0) {
         outputs.push_back(BuildBurnOutput(remaining));
     }
@@ -104,20 +120,23 @@ std::vector<CTxOut> GetMinerFundRequiredOutputs(const Consensus::Params &params,
 
     // Check for Bodhi upgrades, from the latest to the Bodhi genesis
     if (!params.bodhiActivationTimes.empty()) {
-        for (size_t bodhiIndex = params.bodhiActivationTimes.size(); bodhiIndex > 0; --bodhiIndex) {
-            size_t index = bodhiIndex - 1; // Adjust for zero-based indexing
-            
-            if (blockTime >= params.bodhiActivationTimes[index]) {
-                if (!params.coinbasePayoutAddresses.bodhiUpgrades.empty() && 
-                    index < params.coinbasePayoutAddresses.bodhiUpgrades.size()) {
-                    const auto &bodhiAddresses = params.coinbasePayoutAddresses.bodhiUpgrades[index];
-                    if (!bodhiAddresses.empty()) {
-                        return BuildOutputsCyclingCapped(bodhiAddresses, pindexPrev, blockReward, params);
+        // Check if blockTime is greater than or equal to the first Bodhi upgrade
+        if (blockTime >= params.bodhiActivationTimes[0]) {
+            for (size_t bodhiIndex = params.bodhiActivationTimes.size(); bodhiIndex > 0; --bodhiIndex) {
+                size_t index = bodhiIndex - 1; // Adjust for zero-based indexing
+                
+                if (blockTime >= params.bodhiActivationTimes[index]) {
+                    if (!params.coinbasePayoutAddresses.bodhiUpgrades.empty() && 
+                        index < params.coinbasePayoutAddresses.bodhiUpgrades.size()) {
+                        const auto &bodhiAddresses = params.coinbasePayoutAddresses.bodhiUpgrades[index];
+                        if (!bodhiAddresses.empty()) {
+                            return BuildOutputsCyclingCapped(bodhiAddresses, pindexPrev, blockReward, params, index);
+                        }
                     }
                 }
             }
         }
-        // If no Bodhi upgrade applies, proceed to check earlier upgrades
+        // If the blockTime is before the first Bodhi upgrade, or no Bodhi upgrade applies, proceed to check earlier upgrades
     }
 
     // 2024-12-21T09:20:00.000Z protocol upgrade which send the miner fund to a burn address

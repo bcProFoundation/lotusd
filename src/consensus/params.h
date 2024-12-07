@@ -60,8 +60,8 @@ struct Params {
     // Activation times for Bodhi upgrades
     std::vector<int64_t> bodhiActivationTimes;
 
-    // Miner fund cap amount in satoshis
-    Amount bodhiCappedMinerFund = Amount(260 * 1000000);  // 260 Lotus, where 1 Lotus = 1,000,000 satoshis
+    // Funding capped amount in satoshis
+    Amount bodhiCappedFundingAmount = Amount(3 * 130 * 1000000);  // 3 x 130 Lotus, where 1 Lotus = 1,000,000 satoshis
 
     /**
      * Don't warn about unknown BIP 9 activations below this height.
@@ -75,6 +75,9 @@ struct Params {
     CoinbaseAddresses coinbasePayoutAddresses;
 
     bool enableDifficultyBasedSubsidy;
+
+    int bodhiStakingRewardsActivation = -1; // Activation of Staking Rewards at the upgrade index of the Bodhi Genesis. -1 is not yet activated.
+    int bodhiCommunityFundActivation = -1; // Activation of Community Fund at the upgrade index of the Bodhi Genesis. -1 is not yet activated.
 
     /** Proof of work parameters */
     uint256 powLimit;
