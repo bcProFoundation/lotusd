@@ -12,7 +12,7 @@ add_library(nng_interface
 find_package(nng CONFIG REQUIRED)
 
 # Find flatbuffers library
-find_package(FlatBuffers CONFIG REQUIRED)
+find_package(Flatbuffers CONFIG REQUIRED)
 
 # Find flatc executable
 find_program(_FLATC flatc)
