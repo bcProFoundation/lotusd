@@ -158,7 +158,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-      scanelf -e ./bitcoin
+      scanelf -e ./lotusd
 
     The output should contain:
 
@@ -173,7 +173,7 @@ Hardening enables the following features:
 
     To verify that the stack is non-executable after compiling use:
 
-      scanelf -e ./bitcoin
+      scanelf -e ./lotusd
 
     The output should contain:
 
