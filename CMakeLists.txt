@@ -7,9 +7,9 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE
 )
 
 project(lotus
-	VERSION 7.3.3
+	VERSION 8.99.3
 	DESCRIPTION "Lotus is a full node implementation of the Lotus protocol."
-	HOMEPAGE_URL "https://lotusia.org"
+	HOMEPAGE_URL "https://github.com/bcProFoundation/lotusd"
 )
 
 add_custom_target(print-version
@@ -19,7 +19,7 @@ add_custom_target(print-version
 
 # Package information
 set(PACKAGE_NAME "Lotus")
-set(PACKAGE_BUGREPORT "https://github.com/LotusiaStewardship/lotusd/issues")
+set(PACKAGE_BUGREPORT "https://github.com/bcProFoundation/lotusd/issues")
 
 # Copyright
 set(COPYRIGHT_YEAR 2024)

@@ -24,6 +24,13 @@ static const CTxOut BuildOutput(const std::string &address,
     return {amount, script};
 }
 
+static const CTxOut BuildBurnOutput(const Amount amount) {
+    // Create a script with OP_RETURN to burn the amount
+    CScript scriptPubKey;
+    scriptPubKey << OP_RETURN;
+    return {amount, scriptPubKey};
+}
+
 static const std::vector<CTxOut>
 BuildOutputsCycling(const std::vector<std::string> &addresses,
                     const CBlockIndex *pindexPrev, const Amount blockReward) {
@@ -54,6 +61,11 @@ std::vector<CTxOut> GetMinerFundRequiredOutputs(const Consensus::Params &params,
                                                 const Amount &blockReward) {
     if (!enableMinerFund) {
         return {};
+    }
+
+    // 2024-12-21T09:20:00.000Z protocol upgrade which burn the miner fund
+    if (IsRuthEnabled(params, pindexPrev)) {
+        return {BuildBurnOutput(blockReward / 2)}; // Burn half of the block reward for Ruth
     }
 
     if (IsJudgesEnabled(params, pindexPrev)) {
