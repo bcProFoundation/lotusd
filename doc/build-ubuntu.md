@@ -94,6 +94,7 @@ nng dependencies (can be disabled by passing `-DBUILD_BITCOIN_NNG=OFF` on the cm
     sudo apt-get install libnng-dev
 
 FlatBuffers - instal from source:
+
     wget https://github.com/google/flatbuffers/archive/refs/tags/v2.0.0.tar.gz
     echo "9ddb9031798f4f8754d00fca2f1a68ecf9d0f83dfac7239af1311e4fd9a565c4 v2.0.0.tar.gz" | sha256sum -c
     tar -zxf v2.0.0.tar.gz
