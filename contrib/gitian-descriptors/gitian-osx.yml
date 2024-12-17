@@ -35,8 +35,8 @@ repositories:
   packages:
   - "cmake"
 remotes:
-- "url": "https://github.com/LotusiaStewardship/lotusd.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/bcProFoundation/lotusd.git"
+  "dir": "lotusd"
 files:
 - "Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz"
 script: |

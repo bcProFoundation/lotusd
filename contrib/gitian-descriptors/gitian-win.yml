@@ -29,8 +29,8 @@ repositories:
     packages:
       - "cmake"
 remotes:
-  - "url": "https://github.com/LotusiaStewardship/lotusd.git"
-    "dir": "bitcoin"
+  - "url": "https://github.com/bcProFoundation/lotusd.git"
+    "dir": "lotusd"
 files: []
 script: |
   WRAP_DIR=$HOME/wrapped
